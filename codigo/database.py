@@ -1,12 +1,12 @@
-# NOVO ARQUIVO: database.py
+# CONTEÚDO ATUALIZADO DE: database.py
 
 import sqlite3
 from tkinter import messagebox
-from config import DB_NAME # Importa as constantes
+from config import DB_PATH # MUDANÇA: Usando DB_PATH em vez de DB_NAME
 
 def conectar_db():
     try:
-        conn = sqlite3.connect(DB_NAME)
+        conn = sqlite3.connect(DB_PATH) # MUDANÇA: Usando o caminho completo
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
         print("DEBUG: Conectado ao SQLite com sucesso.")
@@ -15,9 +15,7 @@ def conectar_db():
         messagebox.showerror("Erro de Banco de Dados", f"Não foi possível conectar ao SQLite: {err}")
         return None
 
-# --- Funções CRUD ---
-# (Todas as funções de DB que estavam em app.py, agora estão aqui)
-
+# ... O resto do arquivo database.py continua exatamente o mesmo ...
 def obter_categorias(conn):
     try:
         with conn:

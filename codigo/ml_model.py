@@ -1,9 +1,10 @@
-# NOVO ARQUIVO: ml_model.py
+# CONTEÚDO ATUALIZADO DE: ml_model.py
 
 import os
 from joblib import load
 from tkinter import messagebox
-from config import MODELO_PATH, VETORIZADOR_PATH # Importa as constantes
+# MUDANÇA: Usando os caminhos completos do config
+from config import MODELO_PATH, VETORIZADOR_PATH
 
 modelo_global = None
 vetorizador_global = None
@@ -11,6 +12,7 @@ vetorizador_global = None
 def carregar_recursos_globais():
     global modelo_global, vetorizador_global
     print("DEBUG: Carregando recursos de ML...")
+    # MUDANÇA: A verificação de existência agora usa os caminhos completos
     if not os.path.exists(MODELO_PATH) or not os.path.exists(VETORIZADOR_PATH):
         messagebox.showerror("Erro Crítico", "Arquivos de modelo não encontrados.")
         return False
@@ -22,7 +24,8 @@ def carregar_recursos_globais():
     except Exception as e:
         messagebox.showerror("Erro Crítico", f"Falha ao carregar modelo: {e}")
         return False
-
+        
+# ... O resto do arquivo ml_model.py continua exatamente o mesmo ...
 def classificar_sentimento_core(frase):
     if not modelo_global or not vetorizador_global:
         messagebox.showerror("Erro", "Modelo de sentimento não carregado.")

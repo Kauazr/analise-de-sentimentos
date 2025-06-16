@@ -1,11 +1,32 @@
-# NOVO ARQUIVO: config.py
+# CONTEÚDO ATUALIZADO DE: config.py
 
-# --- Configurações de Arquivos ---
-MODELO_PATH = 'modelo_sentimentos.joblib'
-VETORIZADOR_PATH = 'vetorizador.joblib'
-DB_NAME = "sentimentos.db"
+import os
+
+# --- LÓGICA DE CAMINHOS ---
+# Pega o caminho absoluto para o diretório onde este arquivo (config.py) está
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Cria caminhos completos e robustos para cada arquivo
+DB_PATH = os.path.join(BASE_DIR, "sentimentos.db")
+SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
+MODELO_PATH = os.path.join(BASE_DIR, 'modelo_sentimentos.joblib')
+VETORIZADOR_PATH = os.path.join(BASE_DIR, 'vetorizador.joblib')
+
+# --- USUÁRIOS E PERMISSÕES ---
+# (Sem alterações aqui)
+USERS = {
+    "admin": {
+        "password": "admin",
+        "role": "programmer"
+    },
+    "cliente": {
+        "password": "123",
+        "role": "client"
+    }
+}
 
 # --- Cores para o Tema ---
+# (Sem alterações aqui)
 BG_PRIMARY = '#2E3B4E'
 BG_SECONDARY = '#3A4A5F'
 FG_PRIMARY = '#E0E0E0'

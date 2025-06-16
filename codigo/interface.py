@@ -1,5 +1,6 @@
 # NOVO ARQUIVO: interface.py
 
+# ... (todos os imports permanecem os mesmos) ...
 import os
 from tkinter import Tk, Frame, Label as tkLabel, Button as tkButton, Text, messagebox, END, StringVar
 from tkinter import ttk
@@ -7,33 +8,33 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import numpy as np
-
-# Importa as constantes de configuração e as funções dos outros módulos
 from config import *
 import database as db
 import ml_model as ml
 
 class AppSentimentos:
-    # MUDANÇA: O __init__ agora recebe a conexão do banco de dados pronta
-    def __init__(self, root_window, db_connection):
+    # MUDANÇA: O __init__ agora recebe também o 'user_role'
+    def __init__(self, root_window, db_connection, user_role):
         self.root = root_window
-        self.conn = db_connection # Armazena a conexão
+        self.conn = db_connection
+        self.user_role = user_role # Armazena o perfil do usuário
+        
+        # ... (resto do __init__ como antes) ...
         self.root.title("VisageStats Pro - Análise de Sentimentos 💇")
         self.root.geometry("850x800")
         self.root.configure(bg=BG_PRIMARY)
-        
         self.categorias_dict = {}
         self.categoria_selecionada_var = StringVar(self.root)
         self.produtos_para_categoria_atual = []
         self.produto_selecionado_ou_novo_var = StringVar(self.root)
         self.ordenacao_relatorio_produtos_var = StringVar(self.root)
-        
         self.setup_estilos()
         self.setup_ui()
         self.carregar_dados_iniciais_ui()
 
+
     def setup_estilos(self):
-        # ... (código setup_estilos exatamente como estava) ...
+        # ... (código de setup_estilos sem alterações) ...
         self.style = ttk.Style(self.root)
         self.style.theme_use('clam')
         self.style.configure('.', background=BG_PRIMARY, foreground=FG_PRIMARY, font=('Arial', 10))
@@ -62,29 +63,38 @@ class AppSentimentos:
         self.style.configure('EvenRow.Treeview', background=BG_SECONDARY, foreground=FG_PRIMARY)
         self.text_widget_style = {'background': TEXT_INPUT_BG, 'foreground': FG_PRIMARY, 'font': ('Arial', 10), 'borderwidth': 1, 'relief': 'sunken', 'insertbackground': FG_PRIMARY}
 
+
     def setup_ui(self):
-        # ... (código setup_ui exatamente como estava) ...
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(expand=True, fill='both', padx=10, pady=10)
-        self.tab_avaliar_produto = ttk.Frame(self.notebook, style='TFrame')
-        self.notebook.add(self.tab_avaliar_produto, text='Avaliar Produto')
-        self.criar_aba_avaliar_produto()
+
+        # MUDANÇA: Criação condicional das abas
+        
+        # Abas exclusivas para o programador
+        if self.user_role == 'programmer':
+            self.tab_avaliar_produto = ttk.Frame(self.notebook, style='TFrame')
+            self.notebook.add(self.tab_avaliar_produto, text='Avaliar Produto')
+            self.criar_aba_avaliar_produto()
+
+            self.tab_frases_pesquisa = ttk.Frame(self.notebook, style='TFrame')
+            self.notebook.add(self.tab_frases_pesquisa, text='Adicionar Frases')
+            self.criar_aba_frases_pesquisa()
+
+        # Abas visíveis para ambos os perfis
         self.tab_relatorio_produtos = ttk.Frame(self.notebook, style='TFrame')
         self.notebook.add(self.tab_relatorio_produtos, text='Relatório de Produtos')
         self.criar_aba_relatorio_produtos()
-        self.tab_frases_pesquisa = ttk.Frame(self.notebook, style='TFrame')
-        self.notebook.add(self.tab_frases_pesquisa, text='Adicionar Frases')
-        self.criar_aba_frases_pesquisa()
+
         self.tab_relatorio_geral = ttk.Frame(self.notebook, style='TFrame')
         self.notebook.add(self.tab_relatorio_geral, text='Relatório Geral')
         self.criar_aba_relatorio_geral()
+        
         self.root.protocol("WM_DELETE_WINDOW", self.ao_fechar)
 
+    # ... (todos os outros métodos da classe AppSentimentos, como `carregar_dados_iniciais_ui`, `criar_aba_avaliar_produto`, etc., permanecem exatamente os mesmos)
     def carregar_dados_iniciais_ui(self):
-        # MUDANÇA: As chamadas de DB agora usam o módulo `db`
         categorias_data = db.obter_categorias(self.conn)
         self.categorias_dict = {cat['nome_categoria']: cat['categoria_id'] for cat in categorias_data}
-        # ... (o resto do método continua igual) ...
         nomes_categorias = list(self.categorias_dict.keys())
         if nomes_categorias:
             self.categoria_selecionada_var.set(nomes_categorias[0])
@@ -99,12 +109,7 @@ class AppSentimentos:
             self.ordenacao_relatorio_produtos_combobox['values'] = ["Produto (A-Z)", "Mais Positivas", "Mais Neutras", "Mais Negativas", "Mais Avaliações"]
             self.ordenacao_relatorio_produtos_var.set("Produto (A-Z)")
 
-    # MUDANÇA: Todas as chamadas de funções de DB e ML agora usam seus respectivos módulos
-    # Exemplo: `obter_produtos_por_categoria` virou `db.obter_produtos_por_categoria`
-    # Exemplo: `classificar_sentimento_core` virou `ml.classificar_sentimento_core`
-    
     def criar_aba_avaliar_produto(self):
-        # ... (código criar_aba_avaliar_produto exatamente como estava) ...
         frame = self.tab_avaliar_produto
         ttk.Label(frame, text="Avaliar Produto de Salão", style='Header.TLabel').pack(pady=20)
         ttk.Label(frame, text="Categoria do Produto:").pack(pady=(10, 0))
@@ -146,13 +151,10 @@ class AppSentimentos:
         if not nome_categoria_selecionada or not nome_produto_input or not texto_avaliacao:
             messagebox.showwarning("Aviso", "Todos os campos são obrigatórios.")
             return
-            
         categoria_id = self.categorias_dict.get(nome_categoria_selecionada)
         produto_id = db.adicionar_produto(self.conn, categoria_id, nome_produto_input)
-        
         sentimento = ml.classificar_sentimento_core(texto_avaliacao)
         self.resultado_produto_label.config(text=f"Sentimento: {sentimento.upper()}")
-        
         if db.salvar_avaliacao_produto(self.conn, produto_id, texto_avaliacao, sentimento):
             messagebox.showinfo("Sucesso", "Avaliação salva com sucesso!")
             self.avaliacao_produto_texto.delete("1.0", END)
@@ -161,7 +163,6 @@ class AppSentimentos:
             messagebox.showerror("Erro DB", "Falha ao salvar avaliação.")
 
     def criar_aba_relatorio_produtos(self):
-        # ... (código criar_aba_relatorio_produtos exatamente como estava) ...
         frame = self.tab_relatorio_produtos
         ttk.Label(frame, text="Relatório de Desempenho de Produtos", style='Header.TLabel').pack(pady=15)
         controles_frame = ttk.Frame(frame, style='TFrame')
@@ -198,9 +199,8 @@ class AppSentimentos:
         self.tree_produtos.configure(yscrollcommand=scrollbar_prod.set)
         scrollbar_prod.pack(side="right", fill="y")
         self.canvas_grafico_prod = None
-    
+
     def gerar_e_mostrar_relatorio_produtos(self):
-        # ... (lógica do método gerar_e_mostrar_relatorio_produtos exatamente como estava, mas usando db.*) ...
         nome_categoria_selecionada = self.relatorio_categoria_selecionada_var.get()
         if not nome_categoria_selecionada:
             messagebox.showwarning("Aviso", "Selecione uma categoria.")
@@ -219,8 +219,6 @@ class AppSentimentos:
             messagebox.showinfo("Relatório", f"Não há avaliações para '{nome_categoria_selecionada}'.")
             return
         dados_processados_tabela = {}
-        # ... [processamento e ordenação da lista]
-        # (O resto do código do método é idêntico ao anterior)
         for row in dados_brutos:
             produto = row['nome_produto']
             sentimento = row['sentimento'].capitalize()
@@ -274,7 +272,8 @@ class AppSentimentos:
         ax.set_yticklabels(nomes_produtos_graf, color=FG_PRIMARY, fontsize=8)
         ax.xaxis.set_major_locator(plt.MaxNLocator(integer=True))
         leg = ax.legend(fontsize=8)
-        for text in leg.get_texts(): text.set_color(FG_PRIMARY)
+        for text in leg.get_texts():
+            text.set_color(FG_PRIMARY)
         ax.spines['top'].set_color(BG_SECONDARY)
         ax.spines['right'].set_color(BG_SECONDARY)
         fig.tight_layout(pad=1.2)
@@ -283,7 +282,6 @@ class AppSentimentos:
         self.canvas_grafico_prod.get_tk_widget().pack(side="top", fill="both", expand=True)
 
     def criar_aba_frases_pesquisa(self):
-        # ... (código criar_aba_frases_pesquisa exatamente como estava) ...
         frame = self.tab_frases_pesquisa
         ttk.Label(frame, text="Adicionar Frases de Pesquisa", style='Header.TLabel').pack(pady=20)
         ttk.Label(frame, text="Digite ou cole a frase/avaliação encontrada:").pack(pady=(10, 0))
@@ -299,16 +297,13 @@ class AppSentimentos:
         if not texto_frase:
             messagebox.showwarning("Aviso", "Digite uma frase.")
             return
-        
         sentimento = ml.classificar_sentimento_core(texto_frase)
         self.resultado_frase_pesq_label.config(text=f"Sentimento: {sentimento.upper()}")
-        
         if db.salvar_frase_pesquisada(self.conn, texto_frase, sentimento):
             messagebox.showinfo("Sucesso", "Frase salva com sucesso!")
             self.frase_pesquisada_texto.delete("1.0", END)
 
     def criar_aba_relatorio_geral(self):
-        # ... (código criar_aba_relatorio_geral exatamente como estava) ...
         frame = self.tab_relatorio_geral
         ttk.Label(frame, text="Relatório Geral de Frases Pesquisadas", style='Header.TLabel').pack(pady=20)
         btn_gerar_rel_geral = ttk.Button(frame, text="Gerar Relatório Geral", command=self.gerar_e_mostrar_relatorio_geral, style='Info.TButton')
@@ -318,9 +313,7 @@ class AppSentimentos:
         self.canvas_grafico_geral = None
 
     def gerar_e_mostrar_relatorio_geral(self):
-        # ... (lógica do método gerar_e_mostrar_relatorio_geral exatamente como estava, mas usando db.*) ...
         dados = db.obter_dados_relatorio_geral(self.conn)
-        # (O resto do código do método é idêntico ao anterior)
         if self.canvas_grafico_geral:
             self.canvas_grafico_geral.get_tk_widget().destroy()
         if not dados:
@@ -334,12 +327,14 @@ class AppSentimentos:
         fig.patch.set_facecolor(BG_PRIMARY)
         ax = fig.add_subplot(111)
         wedges, _, autotexts = ax.pie(sizes, labels=None, autopct='%1.1f%%', startangle=140, colors=pie_colors, pctdistance=0.85)
-        for autotext_obj in autotexts: autotext_obj.set_color('black')
+        for autotext_obj in autotexts:
+            autotext_obj.set_color('black')
         ax.set_title('Distribuição de Sentimentos (Frases Pesquisadas)', color=FG_PRIMARY)
         ax.axis('equal')
         legend_labels = [f'{l}: {s:.1f}%' for l, s in zip(labels, (100. * val / sum(sizes) for val in sizes))]
         leg = ax.legend(wedges, legend_labels, title="Sentimentos", loc="center left", bbox_to_anchor=(0.9, 0, 0.5, 1), facecolor=BG_SECONDARY, edgecolor=BORDER_COLOR)
-        for text_obj in leg.get_texts(): text_obj.set_color(FG_PRIMARY)
+        for text_obj in leg.get_texts():
+            text_obj.set_color(FG_PRIMARY)
         leg.get_title().set_color(FG_PRIMARY)
         fig.tight_layout()
         self.canvas_grafico_geral = FigureCanvasTkAgg(fig, master=self.frame_grafico_geral)
