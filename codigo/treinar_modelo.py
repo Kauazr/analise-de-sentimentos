@@ -1,8 +1,20 @@
+# ARQUIVO: treinar_modelo.py
+"""
+Script responsável por treinar o modelo de análise de sentimentos.
+
+Ele usa uma base de frases pré-rotuladas, as transforma em um formato
+numérico (vetorização) e treina um classificador Naive Bayes com esses dados.
+Ao final, salva o modelo treinado e o vetorizador em arquivos .joblib para
+que a aplicação principal possa carregá-los e usá-los para fazer novas previsões.
+"""
+
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from joblib import dump
 
-# Base de dados de frases ampliada
+# --- Base de Dados de Treinamento ---
+# Criei uma lista de frases de exemplo para treinar o modelo.
+# Quanto mais variadas e realistas forem essas frases, melhor será o resultado.
 frases = [
     # ---------------- POSITIVAS ----------------
     "Adorei o atendimento, voltarei com certeza!",
@@ -146,23 +158,34 @@ frases = [
     "A profissional errou na coloração.",
 ]
 
+# --- Rótulos (Labels) ---
+# Aqui eu defino o sentimento correspondente para cada frase da lista acima.
+# A ordem e a quantidade de sentimentos devem ser exatamente as mesmas da lista de frases.
 # 0 = Negativo | 1 = Neutro | 2 = Positivo
 sentimentos = (
-    [2] * 56 +  # Positivas
-    [1] * 30 +  # Neutras
-    [0] * 49    # Negativas
+    [2] * 56 +  # 56 frases positivas
+    [1] * 30 +  # 30 frases neutras
+    [0] * 49    # 49 frases negativas
 )
 
-# Vetorização
+# --- Processo de Treinamento ---
+
+# 1. Vetorização: Transformo as frases de texto em uma matriz de contagem de palavras.
+# É assim que o modelo consegue "ler" as frases.
+print("Vetorizando as frases...")
 vetorizador = CountVectorizer()
 X = vetorizador.fit_transform(frases)
 
-# Treinamento
+# 2. Treinamento: Crio o classificador (escolhi o Multinomial Naive Bayes, que é bom para texto)
+# e o treino com os dados vetorizados (X) e os sentimentos correspondentes (y).
+print("Treinando o modelo Naive Bayes...")
 modelo = MultinomialNB()
 modelo.fit(X, sentimentos)
 
-# Salvamento
+# 3. Salvamento: Salvo o modelo treinado e o vetorizador em disco.
+# A aplicação principal vai carregar esses dois arquivos para fazer as previsões.
+print("Salvando o modelo e o vetorizador em disco...")
 dump(modelo, 'modelo_sentimentos.joblib')
 dump(vetorizador, 'vetorizador.joblib')
 
-print("✅ Modelo treinado e salvo com sucesso com um dataset enriquecido!")
+print("\n✅ Modelo treinado e salvo com sucesso!")

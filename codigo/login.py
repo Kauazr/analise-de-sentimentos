@@ -1,16 +1,29 @@
-# NOVO ARQUIVO: login.py
+# ARQUIVO: login.py
+"""
+Módulo que define a classe da janela de login da aplicação.
+"""
 
 from tkinter import Frame, Label, Entry, Button, messagebox, ttk
 from config import BG_PRIMARY, FG_PRIMARY, TEXT_INPUT_BG, ACCENT_PRIMARY, USERS
 
 class LoginWindow(Frame):
+    """
+    Cria um Frame do Tkinter que contém os campos de usuário, senha e o botão de login.
+    """
     def __init__(self, master, on_login_success):
+        """
+        Inicializa o frame de login.
+        - master: A janela principal (root) onde este frame será colocado.
+        - on_login_success: Uma função (callback) que será chamada quando o login for bem-sucedido.
+                        É assim que a tela de login se comunica com o resto do app.
+        """
         super().__init__(master, bg=BG_PRIMARY)
         self.on_login_success = on_login_success
 
-        # Centraliza o frame de login na janela
+        # Uso o 'place' para centralizar o frame na janela, fica mais bonito.
         self.place(relx=0.5, rely=0.5, anchor="center")
 
+        # Configurações de estilo específicas para esta janela
         style = ttk.Style()
         style.configure('Login.TButton', font=('Arial', 10, 'bold'), padding=6)
         style.map('Login.TButton',
@@ -20,7 +33,7 @@ class LoginWindow(Frame):
         
         Label(self, text="Login", font=('Arial', 18, 'bold'), bg=BG_PRIMARY, fg=FG_PRIMARY).pack(pady=20)
         
-        # Frame para os campos de entrada
+        # Crio um frame interno para alinhar os campos de entrada com grid
         frame_entries = Frame(self, bg=BG_PRIMARY)
         frame_entries.pack(pady=10, padx=30)
         
@@ -35,18 +48,23 @@ class LoginWindow(Frame):
         self.login_button = ttk.Button(self, text="Entrar", command=self._attempt_login, style='Login.TButton', width=20)
         self.login_button.pack(pady=30)
 
-        # Permite pressionar Enter para logar
+        # Facilidade para o usuário: permite logar pressionando a tecla Enter
         self.master.bind('<Return>', lambda event: self._attempt_login())
 
     def _attempt_login(self):
+        """
+        Pega os dados dos campos de entrada, verifica se são válidos e,
+        em caso de sucesso, chama a função de callback `on_login_success`.
+        """
         username = self.user_entry.get()
         password = self.pass_entry.get()
 
         user_data = USERS.get(username)
 
+        # Verifico se o usuário existe e se a senha está correta
         if user_data and user_data["password"] == password:
             messagebox.showinfo("Sucesso", f"Login bem-sucedido! Bem-vindo(a), {username}.")
-            # Chama a função de callback passando o perfil do usuário
+            # Chamo a função que foi passada no __init__, enviando o perfil do usuário
             self.on_login_success(user_data["role"])
         else:
             messagebox.showerror("Erro de Login", "Usuário ou senha inválidos.")

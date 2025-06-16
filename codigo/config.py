@@ -1,19 +1,25 @@
-# CONTEÚDO ATUALIZADO DE: config.py
+# ARQUIVO: config.py
+"""
+Módulo para centralizar todas as configurações e constantes da aplicação.
+Isso facilita a manutenção, pois qualquer ajuste de cor, caminho ou usuário
+é feito em um único lugar.
+"""
 
 import os
 
 # --- LÓGICA DE CAMINHOS ---
-# Pega o caminho absoluto para o diretório onde este arquivo (config.py) está
+# Crio caminhos absolutos para garantir que o programa encontre seus arquivos
+# não importa de qual diretório ele seja executado.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Cria caminhos completos e robustos para cada arquivo
 DB_PATH = os.path.join(BASE_DIR, "sentimentos.db")
 SCHEMA_PATH = os.path.join(BASE_DIR, "schema.sql")
 MODELO_PATH = os.path.join(BASE_DIR, 'modelo_sentimentos.joblib')
 VETORIZADOR_PATH = os.path.join(BASE_DIR, 'vetorizador.joblib')
 
 # --- USUÁRIOS E PERMISSÕES ---
-# (Sem alterações aqui)
+# Defino os usuários, senhas e seus perfis de acesso.
+# 'programmer' tem acesso total, 'client' tem acesso restrito.
 USERS = {
     "admin": {
         "password": "admin",
@@ -25,8 +31,8 @@ USERS = {
     }
 }
 
-# --- Cores para o Tema ---
-# (Sem alterações aqui)
+# --- PALETA DE CORES PARA O TEMA ---
+# Defino todas as cores da interface aqui para manter um padrão visual.
 BG_PRIMARY = '#2E3B4E'
 BG_SECONDARY = '#3A4A5F'
 FG_PRIMARY = '#E0E0E0'

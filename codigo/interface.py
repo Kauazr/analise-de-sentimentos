@@ -1,6 +1,10 @@
-# NOVO ARQUIVO: interface.py
+# ARQUIVO: interface.py
+"""
+Módulo da interface principal da aplicação (a janela com as abas).
+Contém a classe 'AppSentimentos' que constrói e gerencia todos os
+elementos visuais.
+"""
 
-# ... (todos os imports permanecem os mesmos) ...
 import os
 from tkinter import Tk, Frame, Label as tkLabel, Button as tkButton, Text, messagebox, END, StringVar
 from tkinter import ttk
@@ -8,33 +12,47 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import numpy as np
+
+# Importo as configurações e as funções dos outros módulos que criei
 from config import *
 import database as db
 import ml_model as ml
 
 class AppSentimentos:
-    # MUDANÇA: O __init__ agora recebe também o 'user_role'
+    """
+    A classe principal da UI. Responsável por construir a janela com as abas,
+    widgets e por conectar as ações do usuário (cliques de botão) com as
+    funções de backend (banco de dados, ML).
+    """
     def __init__(self, root_window, db_connection, user_role):
+        """
+        Inicializa a janela principal.
+        - root_window: A janela raiz do Tkinter.
+        - db_connection: A conexão com o banco de dados já estabelecida.
+        - user_role: O perfil do usuário ('programmer' ou 'client'), para customizar a UI.
+        """
         self.root = root_window
         self.conn = db_connection
-        self.user_role = user_role # Armazena o perfil do usuário
+        self.user_role = user_role
         
-        # ... (resto do __init__ como antes) ...
         self.root.title("VisageStats Pro - Análise de Sentimentos 💇")
         self.root.geometry("850x800")
         self.root.configure(bg=BG_PRIMARY)
+        
+        # Variáveis do Tkinter para controlar os widgets
         self.categorias_dict = {}
         self.categoria_selecionada_var = StringVar(self.root)
         self.produtos_para_categoria_atual = []
         self.produto_selecionado_ou_novo_var = StringVar(self.root)
         self.ordenacao_relatorio_produtos_var = StringVar(self.root)
+        
         self.setup_estilos()
         self.setup_ui()
         self.carregar_dados_iniciais_ui()
 
 
     def setup_estilos(self):
-        # ... (código de setup_estilos sem alterações) ...
+        """Define todos os estilos dos widgets ttk para a aplicação."""
         self.style = ttk.Style(self.root)
         self.style.theme_use('clam')
         self.style.configure('.', background=BG_PRIMARY, foreground=FG_PRIMARY, font=('Arial', 10))
@@ -65,12 +83,14 @@ class AppSentimentos:
 
 
     def setup_ui(self):
+        """
+        Constrói a interface principal, criando o Notebook (sistema de abas)
+        e adicionando as abas de acordo com o perfil do usuário logado.
+        """
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(expand=True, fill='both', padx=10, pady=10)
-
-        # MUDANÇA: Criação condicional das abas
         
-        # Abas exclusivas para o programador
+        # Aqui está a lógica de permissão: só mostro certas abas para o programador.
         if self.user_role == 'programmer':
             self.tab_avaliar_produto = ttk.Frame(self.notebook, style='TFrame')
             self.notebook.add(self.tab_avaliar_produto, text='Avaliar Produto')
@@ -80,7 +100,7 @@ class AppSentimentos:
             self.notebook.add(self.tab_frases_pesquisa, text='Adicionar Frases')
             self.criar_aba_frases_pesquisa()
 
-        # Abas visíveis para ambos os perfis
+        # Essas abas são visíveis para todos os perfis.
         self.tab_relatorio_produtos = ttk.Frame(self.notebook, style='TFrame')
         self.notebook.add(self.tab_relatorio_produtos, text='Relatório de Produtos')
         self.criar_aba_relatorio_produtos()
@@ -89,22 +109,30 @@ class AppSentimentos:
         self.notebook.add(self.tab_relatorio_geral, text='Relatório Geral')
         self.criar_aba_relatorio_geral()
         
+        # Garante que a conexão com o DB seja fechada ao sair
         self.root.protocol("WM_DELETE_WINDOW", self.ao_fechar)
 
-    # ... (todos os outros métodos da classe AppSentimentos, como `carregar_dados_iniciais_ui`, `criar_aba_avaliar_produto`, etc., permanecem exatamente os mesmos)
+
     def carregar_dados_iniciais_ui(self):
+        """Carrega dados iniciais, como a lista de categorias, para os widgets."""
+        # Agora as chamadas de banco de dados usam o módulo `db`
         categorias_data = db.obter_categorias(self.conn)
         self.categorias_dict = {cat['nome_categoria']: cat['categoria_id'] for cat in categorias_data}
+        
         nomes_categorias = list(self.categorias_dict.keys())
         if nomes_categorias:
-            self.categoria_selecionada_var.set(nomes_categorias[0])
+            # Popula a combobox na aba de relatórios
             if hasattr(self, 'relatorio_categoria_combobox'):
                 self.relatorio_categoria_combobox['values'] = nomes_categorias
                 self.relatorio_categoria_selecionada_var.set(nomes_categorias[0])
-        if hasattr(self, 'categoria_combobox'):
-            self.categoria_combobox['values'] = nomes_categorias
-            if nomes_categorias:
+
+            # Popula a combobox na aba de avaliação (se ela existir para este usuário)
+            if hasattr(self, 'categoria_combobox'):
+                self.categoria_selecionada_var.set(nomes_categorias[0])
+                self.categoria_combobox['values'] = nomes_categorias
                 self.atualizar_produtos_combobox()
+        
+        # Configura a combobox de ordenação (se existir)
         if hasattr(self, 'ordenacao_relatorio_produtos_combobox'):
             self.ordenacao_relatorio_produtos_combobox['values'] = ["Produto (A-Z)", "Mais Positivas", "Mais Neutras", "Mais Negativas", "Mais Avaliações"]
             self.ordenacao_relatorio_produtos_var.set("Produto (A-Z)")
@@ -342,6 +370,7 @@ class AppSentimentos:
         self.canvas_grafico_geral.get_tk_widget().pack(side="top", fill="both", expand=True)
 
     def ao_fechar(self):
+        """Função chamada quando a janela é fechada, para garantir que a conexão com o DB seja encerrada."""
         print("DEBUG: Fechando aplicação...")
         if self.conn:
             self.conn.close()
