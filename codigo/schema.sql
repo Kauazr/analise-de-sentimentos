@@ -1,70 +1,51 @@
--- Criação do banco de dados
-CREATE DATABASE IF NOT EXISTS tb_sentimentos;
-USE tb_sentimentos;
+-- Estrutura de tabelas para o banco de dados SQLite
 
 -- Tabela: Categorias
 DROP TABLE IF EXISTS Categorias;
 CREATE TABLE Categorias (
-    categoria_id INT PRIMARY KEY AUTO_INCREMENT,
-    nome_categoria VARCHAR(100) UNIQUE NOT NULL
+    categoria_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome_categoria TEXT UNIQUE NOT NULL
 );
-
--- Inserção de categorias pré-definidas
-INSERT IGNORE INTO Categorias (nome_categoria) VALUES 
-    ('Shampoo'),
-    ('Condicionador'),
-    ('Máscara Capilar'),
-    ('Selagem'),
-    ('Tintura'),
-    ('Botox'),
-    ('Progressiva'),
-    ('Máscara de Hidratação'),
-    ('Óleo'),
-    ('Liven'),
-    ('Reparador de Ponta'),
-    ('Gel Finalizador'),
-    ('Spray'),
-    ('Pomada Capilar');
 
 -- Tabela: Produtos
 DROP TABLE IF EXISTS Produtos;
 CREATE TABLE Produtos (
-    produto_id INT PRIMARY KEY AUTO_INCREMENT,
-    categoria_id INT,
-    nome_produto VARCHAR(255) NOT NULL,
-    FOREIGN KEY (categoria_id) REFERENCES Categorias(categoria_id)
+    produto_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    categoria_id INTEGER,
+    nome_produto TEXT NOT NULL,
+    FOREIGN KEY (categoria_id) REFERENCES Categorias(categoria_id) ON DELETE CASCADE,
+    UNIQUE(categoria_id, nome_produto)
 );
 
 -- Tabela: AvaliacoesProdutos
 DROP TABLE IF EXISTS AvaliacoesProdutos;
 CREATE TABLE AvaliacoesProdutos (
-    avaliacao_id INT PRIMARY KEY AUTO_INCREMENT,
-    produto_id INT,
+    avaliacao_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    produto_id INTEGER,
     texto_avaliacao TEXT NOT NULL,
-    sentimento VARCHAR(50) NOT NULL, -- 'positivo', 'neutro', 'negativo'
-    data_avaliacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (produto_id) REFERENCES Produtos(produto_id)
+    sentimento TEXT NOT NULL, -- 'positivo', 'neutro', 'negativo'
+    data_avaliacao TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (produto_id) REFERENCES Produtos(produto_id) ON DELETE CASCADE
 );
 
 -- Tabela: FrasesPesquisadas
 DROP TABLE IF EXISTS FrasesPesquisadas;
 CREATE TABLE FrasesPesquisadas (
-    frase_id INT PRIMARY KEY AUTO_INCREMENT,
+    frase_id INTEGER PRIMARY KEY AUTOINCREMENT,
     texto_frase TEXT NOT NULL,
-    sentimento_analisado VARCHAR(50),
-    fonte VARCHAR(255) DEFAULT 'Manual',
-    data_adicao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    sentimento_analisado TEXT,
+    fonte TEXT DEFAULT 'Manual',
+    data_adicao TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabela: Postagens (já existente, será mantida)
+-- Tabela: Postagens (mantida para compatibilidade, se necessário)
 DROP TABLE IF EXISTS postagens;
 CREATE TABLE postagens (
-    id INT NOT NULL AUTO_INCREMENT,
-    usuario VARCHAR(10) NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario TEXT NOT NULL,
     texto TEXT NOT NULL,
-    sentimento ENUM('positivo', 'neutro', 'negativo') NOT NULL,
-    data TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id)
+    sentimento TEXT NOT NULL CHECK(sentimento IN ('positivo', 'neutro', 'negativo')),
+    data TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Dados de exemplo para a tabela postagens
@@ -84,18 +65,3 @@ INSERT INTO postagens (usuario, texto, sentimento, data) VALUES
 ('Eduardo','A atualização foi feita ontem à noite.','neutro','2025-04-08 02:10:06'),
 ('Juliana','Entrei em contato com o suporte para tirar dúvidas.','neutro','2025-04-08 02:10:06'),
 ('joao','gostei da casa','positivo','2025-05-18 23:39:52');
-
-
-SELECT * FROM Categorias;
-
-SELECT * FROM postagens;
-
-SELECT * FROM FrasesPesquisadas;
-
-SELECT p.nome_produto, c.nome_categoria 
-FROM Produtos p
-JOIN Categorias c ON p.categoria_id = c.categoria_id;
-
-SELECT pr.nome_produto, ap.texto_avaliacao, ap.sentimento 
-FROM AvaliacoesProdutos ap
-JOIN Produtos pr ON ap.produto_id = pr.produto_id;
