@@ -1,1 +1,0 @@
-INSERT INTO Categorias (nome_categoria) VALUES ('Shampoo'), ('Condicionador'), ('Máscara Capilar'), ('Selagem'), ('Tintura'), ('Botox'), ('Progressiva'), ('Máscara de Hidratação'), ('Óleo'), ('Liven'), ('Reparador de Ponta'), ('Gel Finalizador'), ('Spray'), ('Pomada Capilar');

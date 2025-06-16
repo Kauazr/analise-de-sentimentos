@@ -569,10 +569,10 @@ class AppSentimentos:
 
         num_graf_prods = len(nomes_produtos_graf)
         if num_graf_prods == 0: # Segurança, embora já coberto pelo 'if not dados_brutos'
-             if self.canvas_grafico_prod:
+            if self.canvas_grafico_prod:
                 self.canvas_grafico_prod.get_tk_widget().destroy()
                 self.canvas_grafico_prod = None
-             return
+            return
 
         # Altura dinâmica da figura
         fig_height_graph = max(3.5, min(12, 1.5 + num_graf_prods * 0.45)) # Ajuste a heurística conforme necessário
